@@ -73,8 +73,8 @@ public class Event implements Serializable{
 			@NotNull
 			Person owner;
 			long countNotify;
-			HashSet<Person> participants;
-			HashSet<Person> subscribers;
+			HashSet<String> participants;
+			HashSet<String> subscribers;
 			
 		public enum Holiday
 		{

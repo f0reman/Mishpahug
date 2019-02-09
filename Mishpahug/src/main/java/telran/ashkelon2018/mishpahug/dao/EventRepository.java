@@ -12,6 +12,9 @@ public interface EventRepository extends JpaRepository<Event, Long>{
 			+ "OR e.date_time_start = :start", nativeQuery = true)
 	int checkEvent(@Param("start") long start, @Param("finish") long finish, @Param("idp") String id);
 
+	@Query(value = "SELECT * from event e WHERE  :id MEMBER OF e.subscribes", nativeQuery = true)
+	Event findAndRemoveOtherSubscibes(String id);
+
 	
 //	@Query("SELECT e from Event e INNER JOIN Person p ON p.id=:idp")
 //	Set<Event> checkEvent(@Param("idp") String id);

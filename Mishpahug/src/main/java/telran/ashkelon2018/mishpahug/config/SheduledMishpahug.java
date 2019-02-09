@@ -60,7 +60,7 @@ public class SheduledMishpahug implements SchedulingConfigurer{
 //                    	System.out.println("THREAD#2  ");
 //                        eventDone();
 //                    }
-//                }, new CronTrigger("*/12 * * * * *") );
+//                }, new CronTrigger("*/10 * * * * *") );
         
 //        taskRegistrar.addFixedRateTask(
 //                new Runnable() {

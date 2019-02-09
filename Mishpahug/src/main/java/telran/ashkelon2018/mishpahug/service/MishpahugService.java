@@ -17,5 +17,8 @@ public interface MishpahugService {
 	PersonDto updPerson(PersonDto personDto, String id);
 	
 	boolean addEvent(EventAddDto eventAddDto,String id);
-
+	
+	boolean subscribeToEvent(String id, Long eventId);
+	boolean unSubscribeToEvent(String id, Long eventId);
+	
 }

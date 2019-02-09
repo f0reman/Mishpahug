@@ -18,7 +18,6 @@ import telran.ashkelon2018.mishpahug.dao.SettingRepository;
 import telran.ashkelon2018.mishpahug.domain.Event;
 import telran.ashkelon2018.mishpahug.domain.EventForWork;
 import telran.ashkelon2018.mishpahug.domain.Person;
-import telran.ashkelon2018.mishpahug.domain.SettingsProject;
 import telran.ashkelon2018.mishpahug.dto.DataDto;
 import telran.ashkelon2018.mishpahug.dto.EventAddDto;
 import telran.ashkelon2018.mishpahug.dto.EventInProgressDto;
@@ -27,6 +26,8 @@ import telran.ashkelon2018.mishpahug.dto.enums.Status;
 import telran.ashkelon2018.mishpahug.exceptions.EventCreateException;
 import telran.ashkelon2018.mishpahug.exceptions.EventCreateToWorkException;
 import telran.ashkelon2018.mishpahug.exceptions.EventDublicateException;
+import telran.ashkelon2018.mishpahug.exceptions.SubscribeEventDublicateException;
+import telran.ashkelon2018.mishpahug.exceptions.SubscribeEventException;
 import telran.ashkelon2018.mishpahug.exceptions.UserAddExist;
 import telran.ashkelon2018.mishpahug.exceptions.UserAddServerException;
 import telran.ashkelon2018.mishpahug.exceptions.UserUpdateNotFoundException;
@@ -234,9 +235,9 @@ try {
 		System.out.println("Set 14 ");
 		eventNew.setCountNotify(0);
 		System.out.println("Set 15 ");
-		eventNew.setSubscribers(new HashSet<Person>());
+		eventNew.setSubscribers(new HashSet<String>());
 		System.out.println("Set 16 ");
-		eventNew.setParticipants(new HashSet<Person>());
+		eventNew.setParticipants(new HashSet<String>());
 		
 		
 		System.out.println("Start save in EventRepository");
@@ -274,8 +275,53 @@ try {
 			throw new EventCreateToWorkException();
 			}
 		}
+
+	@Override
+	public boolean subscribeToEvent(String id, Long eventId) {
+		Event eventUpdate=eventRepository.findById(eventId).orElse(null);
+		if (eventUpdate!=null) { 
+		HashSet <String> subscribes=eventUpdate.getSubscribers() ;
+		Person person = personRepository.findById(id).orElse(null);
+				if(person!=null&&(eventUpdate.getStatus().equals(Status.in_process)||
+						(eventUpdate.getStatus().equals(Status.pending))))
+						{
+							if (!eventUpdate.getOwner().equals(person)) {		
+									if (subscribes.add(id)) {
+											eventUpdate.setSubscribers(subscribes);
+											eventRepository.saveAndFlush(eventUpdate);
+											findAndRemoveOtherSubscibes(id);
+											return true; 
+									}
+							} else 
+								throw new SubscribeEventDublicateException();
+				}
+		}  
+		throw new SubscribeEventException();
+	}
+	
+	
+	@Override
+	public boolean unSubscribeToEvent(String id, Long eventId) {
+		Event eventUpdate=eventRepository.findById(eventId).orElse(null);
+		if (eventUpdate!=null) { 
+		HashSet <String> subscribes=eventUpdate.getSubscribers() ;
+		Person person = personRepository.findById(id).orElse(null);
+				if(person!=null) {
+						if (subscribes.remove(id)) {
+								eventUpdate.setSubscribers(subscribes);
+								eventRepository.saveAndFlush(eventUpdate);
+								return true; 
+						}
+				}  
+		}  
+		throw new SubscribeEventException();
+	}
+	
+	private void findAndRemoveOtherSubscibes(String id) {
+		
+		Event eventUpdate = eventRepository.findAndRemoveOtherSubscibes(id);
+		
+		unSubscribeToEvent(id, eventUpdate.getEventId());
 	}
 
-
-
-
+}
